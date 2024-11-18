@@ -1,6 +1,6 @@
 ---
-title: "Basic Analysis for Scale Archiving"
-subtitle: "*ZIS R-Tutorials*"
+title: "ScaleArch"
+subtitle: "*ZIS R-Tutorials: Basic Analysis for Scale Archiving*"
 logo: pics/zis_logo.svg
 bibliography: basic.bib
 
@@ -12,7 +12,7 @@ author:
   - name: David Grüning
     affiliations: "Heidelberg University; GESIS – Leibniz Institute for the Social Sciences"
 
-   
+
 date: 2024-07-01
 date-format: "DD.MM.YYYY"
 date-modified	: last-modified
@@ -27,9 +27,9 @@ format:
     css: technical/styles.css
     template-partials:
        - technical/title-block.html
-    
+
 license: "CC BY-NC 4.0"
-citation: 
+citation:
     type: "document"
     title: |
         Basic Analysis for Scale Archiving
@@ -40,16 +40,16 @@ citation:
 
     issued: 2024
     container-title: ZIS R-tutorials
-    publisher: GESIS – Leibniz Institute for the Social Sciences 
+    publisher: GESIS – Leibniz Institute for the Social Sciences
     URL: https://zis.gesis.org/infotexte/GuidelineMaterials.html
-    
+
 ---
 ## Introduction
 
-The following tutorial presents the basic analysis required for an instrument to be archived in the Open Access Repository for Measurement Instruments (ZIS). As an example, we use a scale with continuous indicators, so not all parts of the analysis are appropriate for instruments with categorical indicators. We point this out whenever relevant. The treatment of categorical indicators is covered in a separate tutorial. 
+The following tutorial presents the basic analysis required for an instrument to be archived in the Open Access Repository for Measurement Instruments (ZIS). As an example, we use a scale with continuous indicators, so not all parts of the analysis are appropriate for instruments with categorical indicators. We point this out whenever relevant. The treatment of categorical indicators is covered in a separate tutorial.
 
 ## Data Preparation & Descriptive Analysis
-In this tutorial, we will use the `HolzingerSwineford1939` data set, which contains mental ability test scores of seventh- and eighth-grade children from two different schools (Pasteur and Grant-White). 
+In this tutorial, we will use the `HolzingerSwineford1939` data set, which contains mental ability test scores of seventh- and eighth-grade children from two different schools (Pasteur and Grant-White).
 
 ```{r}
 #| message: false
@@ -72,7 +72,7 @@ First, let's compute the descriptives for the nominal variables --- the counts. 
 table(Data$sex,
       useNA = "always")
 ```
-If we have multiple variables, we can use a loop that iterates over the elements of the `nominal_variables` vector and produces as many tables with counts as there are variables in that vector. 
+If we have multiple variables, we can use a loop that iterates over the elements of the `nominal_variables` vector and produces as many tables with counts as there are variables in that vector.
 
 ```{r}
 # Define nominal variables
@@ -113,7 +113,7 @@ smmry <- data.frame(
 
 # Format the numeric columns to 2 decimal places using sprintf
 smmry <- smmry |>
-  dplyr::mutate(across(c(avrg_, sd_, skw_, krtss_), 
+  dplyr::mutate(across(c(avrg_, sd_, skw_, krtss_),
                 ~ sprintf("%.2f", .)))
 
 # Rename columns
@@ -122,8 +122,8 @@ smmry
 ```
 Alternatively, we could use the `describe()` function from the `psych` package, which can be particularly useful with multiple continuous variables. The only caveat of that function is that it will not produce the percentage of missing observations per variable automatically, which we could easily circumvent by running `colSums(is.na(data))/nrow(data)`, where `colSums(is.na(data))` counts the occurrences of missing data for the variables in our data set, and `nrow(data)` gives us the total number of rows.
 
-## Dimensionality Assessment & Factorial Validity 
-First, we build a look-up table where items are assigned to different subscales. We will use the table for the subsequent analyses in this document. 
+## Dimensionality Assessment & Factorial Validity
+First, we build a look-up table where items are assigned to different subscales. We will use the table for the subsequent analyses in this document.
 
 ```{r}
 # Build lookup table for required items
@@ -132,8 +132,8 @@ lookup_table <- data.frame(item = paste("x", c(1:9), sep = ""),
                                             each = 3))
                            )
 ```
-### Exploratory Factor Analysis 
-To decide how many latent dimension to extract, we will first use parallel analysis (for the factor solution, not principle components) and exploratory factor analysis. We run parallel analysis using the following syntax: 
+### Exploratory Factor Analysis
+To decide how many latent dimension to extract, we will first use parallel analysis (for the factor solution, not principle components) and exploratory factor analysis. We run parallel analysis using the following syntax:
 
 ```{r}
 #| message: false
@@ -144,22 +144,22 @@ parallel_analyses_efa <- psych::fa.parallel(Data[ , unlist(lookup_table$item)],
                                             fa = "fa", # Method to explore dimensionality: efa
                                             fm = "minres", nfactors = 1, SMC = F,
                                             n.iter = 30, # quant = .95,
-                                            cor = "cor")                            
+                                            cor = "cor")
 ```
 ::: {.column-margin}
-For categorical data, we would need to change the `cor =` argument in the `fa.parallel()` function to `"poly"` and use polychoric correlations.  
+For categorical data, we would need to change the `cor =` argument in the `fa.parallel()` function to `"poly"` and use polychoric correlations.
 :::
 
-The idea behind parallel analysis in exploratory factor analysis (EFA) involves comparing the eigenvalues from our actual data to those from randomly generated data to determine the number of factors to retain. The random datasets match our actual dataset in terms of sample size and the number of variables. Eigenvalues are calculated for both the real data and the random data. This process is repeated multiple times to generate a distribution of eigenvalues for the random data. 
+The idea behind parallel analysis in exploratory factor analysis (EFA) involves comparing the eigenvalues from our actual data to those from randomly generated data to determine the number of factors to retain. The random datasets match our actual dataset in terms of sample size and the number of variables. Eigenvalues are calculated for both the real data and the random data. This process is repeated multiple times to generate a distribution of eigenvalues for the random data.
 
-The key step is then to compare the eigenvalues from our actual data with the mean (or sometimes the 95th percentile) of the eigenvalues from the random datasets. We retain those factors where the actual eigenvalue exceeds the corresponding eigenvalue from the random data. In our case,  @fig-figpar with a scree plot suggests that we should extract three factors. 
+The key step is then to compare the eigenvalues from our actual data with the mean (or sometimes the 95th percentile) of the eigenvalues from the random datasets. We retain those factors where the actual eigenvalue exceeds the corresponding eigenvalue from the random data. In our case,  @fig-figpar with a scree plot suggests that we should extract three factors.
 
 ::: {.callout-important appearance="simple"}
 ## Be careful
 Quite often, researchers use the Kaiser-1 rule to decide on the number of latent factors to extract. That is, they check how many eigenvalues are greater than 1. This method has been shown to not be robust and can result in extracting too many latent dimensions [see, @russell_search_2002; @van_der_eijk_risky_2015]. Hence, you should probably refrain from using it.
 :::
 
-Knowing how many factors to extract, we will estimate now an EFA model with three factors using the oblique rotation and minimal residuals (a.k.a. ordinary least squares) as the extraction method^[If you are interested in the details of exploratory factor analysis, you might want to check the book by @fabrigar_exploratory_2012]. 
+Knowing how many factors to extract, we will estimate now an EFA model with three factors using the oblique rotation and minimal residuals (a.k.a. ordinary least squares) as the extraction method^[If you are interested in the details of exploratory factor analysis, you might want to check the book by @fabrigar_exploratory_2012].
 
 ```{r}
 #| message: false
@@ -177,11 +177,11 @@ efa <- psych::fa(Data[ , unlist(lookup_table$item)],
 round(efa[["loadings"]], digits = 2)
 ```
 
-The output of the `fa()` function is very detailed and potentially overwhelming, so we are not showing it in its entirety. Instead we focus on the matrix of factor loadings. 
+The output of the `fa()` function is very detailed and potentially overwhelming, so we are not showing it in its entirety. Instead we focus on the matrix of factor loadings.
 
 By looking at the matrix, we can see that items `x1-x3` have high loadings on the factor `PA3`, items `x4-x6` on the factor `PA1`, and items `x7-x9` on `PA2`. We will use this insight to specify our confirmatory model.
 
-### Confirmatory Factor Analysis (CFA) 
+### Confirmatory Factor Analysis (CFA)
 To estimate the confirmatory factor analytic model, we will use the `lavaan` package. We specify three models:
 
 1. Unidimensional model (one-factor model);
@@ -192,7 +192,7 @@ While it often makes sense to compare models 1 and 2 because model 1 is typicall
 
 In the congeneric model, we assume that the indicators measure the same construct but not necessarily to the same degree. With the tau-equivalent model, we assume that the indicators measure the construct to the same degree, and we enforce this by constraining the unstandardized factor loadings of each factor to equality. If the fit of the latter is not substantially worse than the former, we can conclude that the indicators are tau-equivalent [@kline_principles_2016].
 
-One of the significant advantages of the tau-equivalent model is that it allows for greater comparability of scores across independent studies using the same items, as the scores do not depend on study-specific factor loadings [@widaman_thinking_2023]. 
+One of the significant advantages of the tau-equivalent model is that it allows for greater comparability of scores across independent studies using the same items, as the scores do not depend on study-specific factor loadings [@widaman_thinking_2023].
 
 To estimate the three models, we first define the model syntax. Then we specify the estimator as Robust Maximum Likelihood (MLR) and set the option `std.lv = TRUE` to impose the identification constraints on the model, i.e., the mean of the latent variable is equal to 0 and the variance is equal to 1^[We could choose other identification constraints. For more details, see @kline_principles_2016]. We use MLR by default as it also works in situations where continuous indicators have severely non-normal distributions.
 
@@ -233,10 +233,10 @@ three_factor_tau_cfa <- lavaan::cfa(model = three_factor_tau_model,
                                     std.lv = TRUE)
 ```
 ::: {.column-margin}
-For categorical data, we would change the `cfa()` call and specify which variables should be treated as categorical by using the `ordered` argument. `lavaan` would then automatically switch to an appropriate estimator --- diagonally weighted least squares. 
+For categorical data, we would change the `cfa()` call and specify which variables should be treated as categorical by using the `ordered` argument. `lavaan` would then automatically switch to an appropriate estimator --- diagonally weighted least squares.
 :::
 
-Once the models are estimated and no warning messages are shown, we can inspect the global fit of the models. 
+Once the models are estimated and no warning messages are shown, we can inspect the global fit of the models.
 
 ```{r}
 # model fit
@@ -314,17 +314,17 @@ After having introduced the residual covariances, the model still fails to pass 
 
 ```{r}
 standardized_solution <- lavaan::standardizedSolution(three_factor_cfa_res)
-subset(standardized_solution, grepl("~~", op) & 
-         grepl("^x[0-9]+$", lhs) & 
-         grepl("^x[0-9]+$", rhs) & 
+subset(standardized_solution, grepl("~~", op) &
+         grepl("^x[0-9]+$", lhs) &
+         grepl("^x[0-9]+$", rhs) &
          lhs != rhs)
 ```
 ::: {.column-margin}
 We use `subset()` and `grepl()` to find rows that:
 
 -   have `~~` in the column `op`
--   start with `x` followed by a numeric value in the columns `lhs` and `rhs` 
--   have different values in the columns `lhs` and `rhs` (because we are interested in the correlations)    
+-   start with `x` followed by a numeric value in the columns `lhs` and `rhs`
+-   have different values in the columns `lhs` and `rhs` (because we are interested in the correlations)
 :::
 Now, we will inspect factor loadings and the correlation structure between the factors.
 ```{r}
@@ -332,16 +332,16 @@ lavaan::lavInspect(three_factor_cfa_res, "std")$lambda
 # interfactor correlation
 lavaan::lavInspect(three_factor_cfa_res, "std")$psi
 ```
-We can see that all the standardized factor loadings have non-trivial values (greater than .3) and vary in magnitude. Correlations between the factors range from .470 (`textual` and `visual`) to .278 (`speed` and `textual`). 
+We can see that all the standardized factor loadings have non-trivial values (greater than .3) and vary in magnitude. Correlations between the factors range from .470 (`textual` and `visual`) to .278 (`speed` and `textual`).
 
-## Descriptive statistics of indicators, reliability, and criterion validity 
+## Descriptive statistics of indicators, reliability, and criterion validity
 In this section, we will take a closer look at the indicators themselves and the observed scores. First, we will compute descriptive statistics for the indicators:
 
 ```{r}
 psych::describe(Data[ , unlist(lookup_table$item)])[, c("mean", "sd", "skew", "kurtosis", "n")]
 ```
 
-Then, we calculate the reliability coefficients. To assess reliability, scholars usually compute Cronbach’s α. However, this coefficient is not appropriate when the indicators are congeneric. If the factor loadings vary substantially, we should compute McDonald’s ω~h~  [@zinbarg_cronbachs_2005]. Still, we will compute both coefficients for the sake of demonstration. For Cronbach’s α, we will compute the median and 95% confidence interval. 
+Then, we calculate the reliability coefficients. To assess reliability, scholars usually compute Cronbach’s α. However, this coefficient is not appropriate when the indicators are congeneric. If the factor loadings vary substantially, we should compute McDonald’s ω~h~  [@zinbarg_cronbachs_2005]. Still, we will compute both coefficients for the sake of demonstration. For Cronbach’s α, we will compute the median and 95% confidence interval.
 
 ```{r}
 #| message: false
@@ -350,15 +350,15 @@ subscales <- unique(lookup_table$subscale)
 for (subscale in subscales){
 alpha_i <- psych::alpha(Data[, lookup_table[lookup_table$subscale == subscale, "item"]],
                                n.iter = 1000)
-# Rounding 
+# Rounding
 alpha_sum <- round(alpha_i[["boot.ci"]], 2)
 
 # Print the subscale name
 cat("Subscale:", subscale, "\n")
-  
+
 # Print the corresponding alpha values
 print(alpha_sum)
-  
+
 # Add an empty line for better readability between subscales
 cat("\n")
 }
@@ -374,7 +374,7 @@ Lastly, we will investigate the criterion validity. For this, we will compute co
 
 
 ```{r}
-# Creating unweighted means 
+# Creating unweighted means
 subscales <- unique(lookup_table$subscale)
 for(subscale in subscales) {
   subscale_name <- paste(subscale, "mean", sep = "_")
@@ -385,7 +385,7 @@ for(subscale in subscales) {
 
 # Transform school variable to a numeric variable
 Data$school_numeric <- as.numeric(Data$school)
-  
+
 
 # Define variables for correlational analyses
 cor_variables <- c("visual_mean", "textual_mean", "speed_mean",
@@ -406,12 +406,12 @@ cor_pval <- as.data.frame(cor_pval) %>%
   mutate(across(everything(), ~ sprintf("%.3f", .)))
 
 cor_coef
-cor_pval 
+cor_pval
 ```
 Correlations are small to moderate, and not all of them are significant. We see that the "visual" scale correlates with gender and grade, while the "textual" and "speed" scales correlate with age, school, and grade.
 
-## Descriptive statistics of the scales 
-The final part of this tutorial consists of computing descriptive statistics for the scale scores. 
+## Descriptive statistics of the scales
+The final part of this tutorial consists of computing descriptive statistics for the scale scores.
 ```{r}
 psych::describe(Data[, c("visual_mean", "textual_mean", "speed_mean")])[, c("mean", "sd", "skew", "kurtosis", "n")]
 ```
