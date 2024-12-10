@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "Basic Analysis for Scale Archiving"
+authors:
+  - name: Piotr Koc
+  - name: Julian Urban
+  - name: David Grüning
+date-released: 2024
+url: "https://zis.gesis.org/infotexte/GuidelineMaterials.html"
+publisher: "GESIS – Leibniz Institute for the Social Sciences"
+repository-code: "ZIS R-tutorials"
+type: document
