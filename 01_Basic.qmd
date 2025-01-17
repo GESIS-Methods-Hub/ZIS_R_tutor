@@ -1,7 +1,8 @@
 ---
 title: "ScaleArch"
 subtitle: "*ZIS R-Tutorials: Basic Analysis for Scale Archiving*"
-logo: pics/zis_logo.svg
+logo: pics/icon_scalearch_new.png
+image: pics/icon_scalearch_new.png
 bibliography: basic.bib
 
 author:
