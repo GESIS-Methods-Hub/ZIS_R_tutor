@@ -16,9 +16,8 @@ author:
     affiliations: "Victoria University of Wellington; GESIS – Leibniz Institute for the Social Sciences"
 
 
-date: 2025-02-15
-date-format: "DD.MM.YYYY"
-date-modified	: 2025-04-04
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+date-modified: 2025-04-04
 format:
   html:
     code-overflow: scroll
